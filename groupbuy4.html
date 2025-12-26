@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HOTCAKE揪團GO! - 零食許願版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Nunito:wght@700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pancake: {
+                            50: '#FFFBEB',
+                            100: '#FEF3C7',
+                            200: '#FDE68A',
+                            300: '#FCD34D',
+                            400: '#FBBF24',
+                            500: '#F59E0B',
+                            600: '#D97706',
+                            700: '#B45309',
+                            800: '#92400E',
+                            900: '#78350F',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Nunito', 'Noto Sans TC', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #FFFBEB; }
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        
+        input:focus, textarea:focus, select:focus { 
+            box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.4); 
+            border-color: #F59E0B; 
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background-color: #FEF3C7; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #FCD34D; border-radius: 4px; border: 2px solid #FEF3C7; }
+        
+        .hover-card { transition: all 0.3s ease; }
+        .hover-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.15), 0 8px 10px -6px rgba(245, 158, 11, 0.1); border-color: #FCD34D; }
+    </style>
+</head>
+<body class="text-pancake-900 pb-20 selection:bg-pancake-200 selection:text-pancake-900">
+
+    <!-- 導航列 -->
+    <nav class="bg-white/90 backdrop-blur-sm border-b border-pancake-200 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 h-18 py-3 flex items-center justify-between">
+            <div onclick="resetAndShowList()" class="flex items-center gap-3 cursor-pointer select-none group">
+                <!-- 鬆餅 LOGO (更新版：堆疊鬆餅+奶油) -->
+                <div class="w-10 h-10 bg-pancake-100 rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform overflow-visible">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="transform translate-y-0.5">
+                        <!-- 底層鬆餅 -->
+                        <path d="M19 13C19 14.8 15.866 16.5 12 16.5C8.13401 16.5 5 14.8 5 13V15C5 16.8 8.13401 18.5 12 18.5C15.866 18.5 19 16.8 19 15V13Z" fill="#F59E0B" stroke="#92400E" stroke-width="1.5" stroke-linejoin="round"/>
+                        <!-- 上層鬆餅 (側面) -->
+                        <path d="M19 9.5C19 11.3 15.866 13 12 13C8.13401 13 5 11.3 5 9.5V11.5C5 13.3 8.13401 15 12 15C15.866 15 19 13.3 19 11.5V9.5Z" fill="#FCD34D" stroke="#92400E" stroke-width="1.5" stroke-linejoin="round"/>
+                        <!-- 上層鬆餅 (表面) -->
+                        <ellipse cx="12" cy="9.5" rx="7" ry="3.5" fill="#FDE68A" stroke="#92400E" stroke-width="1.5"/>
+                        <!-- 奶油塊 -->
+                        <path d="M10.5 5.5H13.5C13.7761 5.5 14 5.72386 14 6V8C14 8.27614 13.7761 8.5 13.5 8.5H10.5C10.2239 8.5 10 8.27614 10 8V6C10 5.72386 10.2239 5.5 10.5 5.5Z" fill="#FFFBEB" stroke="#92400E" stroke-width="1.5"/>
+                        <!-- 糖漿點綴 -->
+                        <path d="M14.5 9C14.5 9 15.5 10.5 14 11.5" stroke="#D97706" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-xl font-black text-pancake-800 tracking-wide leading-none">HOTCAKE</span>
+                    <span class="text-sm font-bold text-pancake-600 tracking-widest leading-none">揪團GO!</span>
+                </div>
+            </div>
+            <button onclick="showPage('create')" id="nav-create-btn" class="bg-pancake-400 text-pancake-900 px-5 py-2.5 rounded-full font-bold hover:bg-pancake-300 transition-all shadow-md shadow-pancake-200 flex items-center gap-2 text-sm transform hover:-translate-y-0.5">
+                <i class="fa-solid fa-plus"></i> 發起開團
+            </button>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-4 py-8">
+
+        <!-- ==================== 頁面 1：團購列表 ==================== -->
+        <section id="page-list" class="fade-in">
+            <div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h2 class="text-3xl font-black text-pancake-800 mb-2">今天想許願什麼？</h2>
+                    <p class="text-pancake-600 font-medium">看看大家開了什麼零食團，趕快加入！</p>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="bg-white p-1.5 rounded-xl border border-pancake-100 shadow-sm flex text-xs font-bold">
+                        <button onclick="setFilter('all')" id="filter-all" class="px-4 py-2 rounded-lg bg-pancake-100 text-pancake-800 transition-all">全部</button>
+                        <button onclick="setFilter('active')" id="filter-active" class="px-4 py-2 rounded-lg text-pancake-400 hover:text-pancake-600 hover:bg-pancake-50 transition-all">進行中</button>
+                        <button onclick="setFilter('ended')" id="filter-ended" class="px-4 py-2 rounded-lg text-pancake-400 hover:text-pancake-600 hover:bg-pancake-50 transition-all">已結束</button>
+                    </div>
+                    <button onclick="clearLocalStorage()" class="text-xs text-pancake-300 hover:text-red-400 underline whitespace-nowrap ml-2">重置</button>
+                </div>
+            </div>
+            
+            <div id="list-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- JS 渲染列表 -->
+            </div>
+            <div id="list-empty" class="hidden flex flex-col items-center justify-center py-16 text-pancake-400 bg-white/50 rounded-3xl border-2 border-dashed border-pancake-200">
+                <i class="fa-regular fa-face-sad-tear text-4xl mb-3 opacity-50"></i>
+                <p>目前沒有符合條件的團購喔</p>
+            </div>
+        </section>
+
+        <!-- ==================== 頁面 2：發起開團 ==================== -->
+        <section id="page-create" class="hidden fade-in max-w-2xl mx-auto">
+            <div class="bg-white rounded-3xl shadow-xl shadow-pancake-100/50 border border-pancake-100 p-8">
+                <div class="flex items-center gap-4 mb-8 pb-6 border-b border-pancake-100">
+                    <div class="w-14 h-14 bg-pancake-100 text-pancake-600 rounded-2xl flex items-center justify-center text-2xl shadow-inner">
+                        <i class="fa-solid fa-flag"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-black text-pancake-800">發起新團購</h2>
+                        <p class="text-sm text-pancake-500">主揪只需要設定規則，品項讓大家自由填！</p>
+                    </div>
+                </div>
+
+                <form onsubmit="handleCreate(event)" class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-bold text-pancake-700 mb-2">團購標題 <span class="text-red-400">*</span></label>
+                        <input type="text" id="c-title" required placeholder="例如：週五好市多零食團" class="w-full px-5 py-3 border border-pancake-200 rounded-2xl outline-none transition-all bg-pancake-50 focus:bg-white text-pancake-900 placeholder-pancake-300">
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-bold text-pancake-700 mb-2">類型</label>
+                            <div class="relative">
+                                <select id="c-type" class="w-full px-5 py-3 border border-pancake-200 rounded-2xl bg-white outline-none appearance-none cursor-pointer">
+                                    <option value="零食">🍪 零食</option>
+                                    <option value="飲料">🥤 飲料</option>
+                                    <option value="團購">📦 團購</option>
+                                    <option value="其他">✨ 其他</option>
+                                </select>
+                                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-pancake-400 pointer-events-none">
+                                    <i class="fa-solid fa-chevron-down"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-pancake-700 mb-2">最低成團數量</label>
+                            <input type="number" id="c-min" value="10" min="1" class="w-full px-5 py-3 border border-pancake-200 rounded-2xl outline-none bg-white">
+                        </div>
+                    </div>
+
+                    <div class="bg-pancake-50/50 p-4 rounded-2xl border border-pancake-100">
+                        <label class="block text-sm font-bold text-pancake-700 mb-2">截止時間 <span class="text-red-400">*</span></label>
+                        <input type="datetime-local" id="c-deadline" required class="w-full px-5 py-3 border border-pancake-200 rounded-2xl outline-none transition-colors focus:bg-white text-pancake-800">
+                        <p class="text-xs text-pancake-400 mt-2 flex items-center gap-1"><i class="fa-regular fa-clock"></i> 時間到後，系統將自動鎖單。</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-pancake-700 mb-2">說明 (選填)</label>
+                        <textarea id="c-desc" rows="3" placeholder="備註事項，例如：統一寄到公司..." class="w-full px-5 py-3 border border-pancake-200 rounded-2xl outline-none transition-colors bg-white resize-none"></textarea>
+                    </div>
+
+                    <div class="flex gap-4 pt-4">
+                        <button type="button" onclick="showPage('list')" class="flex-1 py-3.5 text-pancake-500 font-bold hover:bg-pancake-100 rounded-2xl transition-colors">取消</button>
+                        <button type="submit" class="flex-[2] py-3.5 bg-pancake-400 text-pancake-900 rounded-2xl font-bold shadow-lg shadow-pancake-200 hover:bg-pancake-300 hover:-translate-y-0.5 transition-all">
+                            <i class="fa-solid fa-check mr-1"></i> 確認發布
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- ==================== 頁面 3：跟團填單 (許願模式) ==================== -->
+        <section id="page-join" class="hidden fade-in">
+            <div class="mb-8">
+                <button onclick="resetAndShowList()" class="text-pancake-400 hover:text-pancake-700 font-bold text-sm mb-4 flex items-center gap-2 transition-colors">
+                    <i class="fa-solid fa-arrow-left bg-white p-1.5 rounded-full shadow-sm"></i> 返回列表
+                </button>
+                
+                <div class="flex flex-col md:flex-row md:items-start justify-between gap-6">
+                    <div class="flex-1 w-full">
+                        <div class="flex items-center gap-3 mb-3">
+                            <span id="j-tag" class="text-xs font-bold px-3 py-1 rounded-full bg-white border border-pancake-100 text-pancake-500 shadow-sm">--</span>
+                            <span id="j-status" class="text-xs font-bold px-3 py-1 rounded-full shadow-sm">--</span>
+                        </div>
+                        <h2 id="j-title" class="text-3xl md:text-4xl font-black text-pancake-900 mb-3 leading-tight">--</h2>
+                        
+                        <div class="flex items-center gap-2 text-sm text-pancake-500 mb-5 bg-pancake-100/50 inline-flex px-4 py-2 rounded-xl">
+                            <i class="fa-regular fa-clock text-pancake-600"></i>
+                            <span>截止：<span id="j-deadline-text" class="font-bold text-pancake-700 font-mono">--</span></span>
+                        </div>
+
+                        <div class="bg-white p-5 rounded-2xl border border-pancake-100 shadow-sm inline-block w-full">
+                            <p class="text-xs font-bold text-pancake-300 mb-1 uppercase tracking-wider">主揪公告</p>
+                            <p id="j-desc" class="text-sm text-pancake-800 whitespace-pre-wrap leading-relaxed">--</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-3 shrink-0 w-full md:w-auto">
+                         <button onclick="copyShareLink()" class="bg-pancake-50 border border-pancake-200 text-pancake-700 px-5 py-3 rounded-xl font-bold text-sm hover:bg-pancake-100 transition-colors shadow-sm flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-share-nodes text-pancake-400"></i> 分享連結
+                        </button>
+                        <button onclick="showPage('manage')" class="bg-white border border-pancake-200 text-pancake-600 px-5 py-3 rounded-xl font-bold text-sm hover:bg-white hover:border-pancake-300 hover:text-pancake-800 transition-colors shadow-sm flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-list-check text-pancake-300"></i> 統計與管理
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 狀態警示 Banner -->
+            <div id="j-expired-banner" class="hidden mb-8 bg-slate-100 border border-slate-200 rounded-2xl p-5 flex items-center justify-center gap-3 text-slate-500 font-bold shadow-inner">
+                <i class="fa-solid fa-lock text-xl"></i> 此團購已截止或已刪除，無法再新增或修改。
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- 左側：填單區 -->
+                <div class="lg:col-span-8">
+                    <div class="bg-white rounded-3xl shadow-xl shadow-pancake-100/50 border border-pancake-100 overflow-hidden relative">
+                        <!-- 遮罩層 (截止時顯示) -->
+                        <div id="j-form-overlay" class="hidden absolute inset-0 bg-slate-50/50 backdrop-blur-[1px] z-10 cursor-not-allowed"></div>
+
+                        <div class="p-6 border-b border-pancake-100 bg-pancake-50/30 flex justify-between items-center">
+                            <h3 class="font-bold text-lg text-pancake-800 flex items-center gap-2">
+                                <i class="fa-solid fa-pen-nib text-pancake-400"></i> 我要許願 / 填單
+                            </h3>
+                            <button id="btn-add-item" onclick="addCartRow()" class="text-xs bg-pancake-200 text-pancake-800 px-3 py-1.5 rounded-lg font-bold hover:bg-pancake-300 transition-colors shadow-sm flex items-center gap-1">
+                                <i class="fa-solid fa-plus"></i> 新增品項
+                            </button>
+                        </div>
+                        
+                        <div class="p-6 md:p-8">
+                            <div class="mb-8">
+                                <label class="block text-xs font-bold text-pancake-400 mb-2 uppercase tracking-wider">您的姓名</label>
+                                <input type="text" id="j-name" value="王小明" class="w-full md:w-1/2 px-5 py-3 border border-pancake-200 rounded-2xl bg-white focus:bg-white outline-none transition-colors text-pancake-900 font-medium">
+                            </div>
+
+                            <div class="space-y-4 mb-8" id="j-cart-list">
+                                <!-- JS 動態生成許願項目 -->
+                            </div>
+
+                            <div class="pt-6 border-t border-pancake-100 flex flex-col md:flex-row items-center justify-between gap-4">
+                                <div class="text-sm text-pancake-500 font-medium bg-pancake-50 px-4 py-2 rounded-xl">
+                                    共許願 <span id="j-total-items" class="font-bold text-pancake-700 text-lg mx-1">0</span> 個品項
+                                </div>
+                                <button id="btn-submit-order" onclick="submitOrder()" class="w-full md:w-auto bg-pancake-400 text-pancake-900 px-10 py-3.5 rounded-2xl font-bold shadow-lg shadow-pancake-200 hover:bg-pancake-300 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-paper-plane"></i> 送出許願單
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右側：已參加名單 -->
+                <div class="lg:col-span-4">
+                    <div class="bg-white rounded-3xl shadow-sm border border-pancake-100 p-6 sticky top-24">
+                        <div class="flex justify-between items-end mb-5 pb-3 border-b border-pancake-50">
+                            <h3 class="font-bold text-pancake-700">大家的許願清單</h3>
+                            <span id="j-people-count" class="text-xs font-bold bg-pancake-100 text-pancake-600 px-3 py-1 rounded-full">0 人參與</span>
+                        </div>
+                        <div id="j-others-list" class="space-y-3 max-h-[500px] overflow-y-auto pr-1 custom-scrollbar">
+                            <!-- JS 生成 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 頁面 4：管理頁 ==================== -->
+        <section id="page-manage" class="hidden fade-in">
+            <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <button onclick="showPage('join')" class="w-12 h-12 rounded-2xl bg-white border border-pancake-100 flex items-center justify-center hover:bg-pancake-50 transition-colors shadow-sm text-pancake-400 hover:text-pancake-700">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-2xl font-black text-pancake-900">統計管理</h2>
+                        <p class="text-sm text-pancake-500">主揪專用：檢視大家的許願</p>
+                    </div>
+                </div>
+                
+                <div class="flex gap-2">
+                    <div class="bg-white border border-pancake-200 rounded-2xl px-5 py-3 flex items-center gap-3 shadow-sm">
+                        <div class="text-xs font-bold text-pancake-800 uppercase tracking-wider">開團連結</div>
+                        <input type="text" id="m-share-input" readonly class="text-xs text-pancake-500 bg-transparent outline-none w-40 truncate" value="...">
+                        <button onclick="copyShareLink()" class="text-pancake-600 hover:text-pancake-800 text-xs font-bold bg-pancake-100 px-2 py-1 rounded">
+                            <i class="fa-regular fa-copy"></i>
+                        </button>
+                    </div>
+                    <!-- 刪除按鈕 (僅開團者/管理頁可見) -->
+                    <button onclick="deleteGroup()" id="btn-delete-group" class="bg-red-50 border border-red-100 text-red-500 px-4 py-3 rounded-2xl font-bold text-sm hover:bg-red-100 hover:text-red-700 transition-colors shadow-sm flex items-center gap-2">
+                        <i class="fa-solid fa-trash-can"></i> 刪除此團購
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- 統計區 -->
+                <div class="md:col-span-1">
+                    <div class="bg-gradient-to-b from-white to-pancake-50/50 rounded-3xl shadow-sm border border-pancake-100 p-6">
+                        <h3 class="font-bold text-pancake-700 mb-5 flex items-center gap-2 pb-3 border-b border-pancake-100">
+                            <i class="fa-solid fa-chart-pie text-pancake-400"></i> 品項統計
+                        </h3>
+                        <div id="m-stats-list" class="space-y-2">
+                            <!-- JS 生成 -->
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-pancake-200 text-sm flex justify-between font-bold text-pancake-600 bg-white p-3 rounded-xl shadow-sm">
+                            <span>總許願數</span>
+                            <span id="m-total-qty" class="text-pancake-800 text-lg">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 明細區 -->
+                <div class="md:col-span-2">
+                    <div class="bg-white rounded-3xl shadow-sm border border-pancake-100 overflow-hidden">
+                        <div class="bg-pancake-50/50 px-6 py-4 border-b border-pancake-100 text-xs font-bold text-pancake-400 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-list"></i> 詳細許願列表
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-pancake-50 text-pancake-400 font-bold text-xs uppercase">
+                                    <tr>
+                                        <th class="px-6 py-3">姓名</th>
+                                        <th class="px-6 py-3">品項</th>
+                                        <th class="px-6 py-3 text-right">數量</th>
+                                        <th class="px-6 py-3">參考連結</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="m-orders-list" class="divide-y divide-pancake-50">
+                                    <!-- JS 生成 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 開團成功彈窗 -->
+    <div id="modal-created" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-pancake-900/40 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl fade-in relative border-4 border-pancake-100">
+            <button onclick="closeCreatedModal()" class="absolute top-4 right-4 text-pancake-300 hover:text-pancake-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <div class="w-20 h-20 bg-pancake-100 text-pancake-500 rounded-full flex items-center justify-center mx-auto mb-5 text-3xl shadow-inner">
+                <i class="fa-solid fa-bullhorn"></i>
+            </div>
+            <h3 class="text-2xl font-black text-pancake-800 mb-2">開團成功！</h3>
+            <p class="text-pancake-500 mb-6 text-sm font-medium">快把連結分享給大家來許願。</p>
+            <div class="bg-pancake-50 border border-pancake-200 rounded-2xl p-3 mb-6 flex items-center gap-2">
+                <input type="text" id="created-link-input" readonly class="bg-transparent text-sm text-pancake-600 w-full outline-none truncate font-mono px-1" value="">
+                <button onclick="copyCreatedLink()" class="text-pancake-600 hover:text-pancake-800 bg-white border border-pancake-200 px-3 py-1.5 rounded-lg font-bold text-xs whitespace-nowrap hover:shadow-sm transition-all">複製</button>
+            </div>
+            <button onclick="closeCreatedModal()" class="w-full py-3.5 bg-pancake-400 text-pancake-900 rounded-2xl font-bold hover:bg-pancake-300 transition-all shadow-md">前往許願頁</button>
+        </div>
+    </div>
+
+    <!-- 訂單成功彈窗 -->
+    <div id="modal-success" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-pancake-900/40 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl fade-in border-4 border-green-50">
+            <div class="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-5 text-4xl shadow-sm">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <h3 class="text-2xl font-black text-gray-800 mb-2">許願已送出</h3>
+            <p class="text-gray-500 mb-8 text-sm">您的願望已加入列表。</p>
+            <button onclick="closeModal()" class="w-full py-3.5 bg-pancake-400 text-pancake-900 rounded-2xl font-bold hover:bg-pancake-300 transition-all shadow-md">太棒了</button>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-pancake-800 text-white px-6 py-3 rounded-full shadow-xl shadow-pancake-800/20 text-sm font-bold opacity-0 transition-all duration-300 pointer-events-none z-50 translate-y-4">
+        <i class="fa-solid fa-check-circle mr-1"></i> 已複製到剪貼簿
+    </div>
+
+    <script>
+        // --- 1. 資料處理 (Local Storage) ---
+        let groups = [];
+        let activeGroupId = null;
+        let currentFilter = 'all';
+
+        // 預設資料 (供首次開啟參考)
+        const futureDate = new Date(new Date().getTime() + 3 * 60 * 60 * 1000).toISOString().slice(0, 16);
+        const defaultGroups = [
+            {
+                id: 1700000000000,
+                title: "辦公室零食許願池",
+                type: "零食",
+                min: 10,
+                initiator: "王小明",
+                deadline: futureDate,
+                desc: "大家想吃什麼儘管填，我這週五會去好市多採購！",
+                status: "active", // active, deleted
+                orders: [
+                    {
+                        id: 101,
+                        name: "林小美",
+                        items: [
+                            { name: "特濃起司餅乾", qty: 2, hasLink: false, link: "" },
+                            { name: "黑色洋芋片", qty: 1, hasLink: true, link: "https://example.com/chips" }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        function loadData() {
+            try {
+                const saved = localStorage.getItem('hotcake_groupbuy_v2');
+                if (saved) {
+                    groups = JSON.parse(saved);
+                } else {
+                    groups = JSON.parse(JSON.stringify(defaultGroups));
+                    saveData();
+                }
+            } catch (e) {
+                console.error("讀取資料失敗，重置為預設值", e);
+                groups = JSON.parse(JSON.stringify(defaultGroups));
+                saveData();
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('hotcake_groupbuy_v2', JSON.stringify(groups));
+        }
+
+        function clearLocalStorage() {
+            if(confirm('確定要清除所有本機紀錄並重置嗎？')) {
+                localStorage.removeItem('hotcake_groupbuy_v2');
+                window.location.href = window.location.origin + window.location.pathname;
+            }
+        }
+
+        // 分享連結產生位置：使用 origin + pathname 避免 404
+        function getShareLink(groupId) {
+            const cleanUrl = window.location.origin + window.location.pathname;
+            return `${cleanUrl}?group_id=${groupId}`;
+        }
+
+        // --- 2. 初始化與 URL 解析 ---
+        window.onload = () => {
+            try {
+                loadData();
+                console.log("【Debug】目前 localStorage 資料:", groups);
+
+                // 預設時間設定
+                const now = new Date();
+                now.setHours(now.getHours() + 2);
+                const localIso = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+                const deadlineInput = document.getElementById('c-deadline');
+                if(deadlineInput) deadlineInput.value = localIso;
+
+                // URL 解析
+                const params = new URLSearchParams(window.location.search);
+                const urlId = params.get('group_id');
+                // const isAdmin = params.get('admin') === '1'; // 暫未使用
+
+                console.log("【Debug】URL 參數 ID:", urlId);
+
+                if (urlId) {
+                    // 【關鍵修正】強制轉型為 Number 以確保比對正確 (因為 groups 中的 id 是 Date.now() 產生的數字)
+                    const targetId = Number(urlId); 
+                    
+                    if (isNaN(targetId)) {
+                        console.error("【Debug】無效的 ID 格式");
+                        showPage('list');
+                        return;
+                    }
+
+                    // 【核心邏輯】只檢查 ID 是否存在於 localStorage，不檢查 admin、也不管刪除狀態(顯示時才處理UI)
+                    const group = groups.find(g => g.id === targetId);
+
+                    if (group) {
+                        console.log("【Debug】找到團購:", group.title);
+                        activeGroupId = group.id;
+                        // 只要找到就顯示內容
+                        showPage('join');
+                    } else {
+                        console.warn("【Debug】找不到 ID:", targetId, "現有 IDs:", groups.map(g => g.id));
+                        // 只有真的找不到資料時才跳 Alert
+                        alert('找不到此團購，可能已被刪除 (或是 ID 錯誤/跨裝置無資料)。');
+                        try { window.history.replaceState({}, document.title, window.location.pathname); } catch(e) {}
+                        showPage('list');
+                    }
+                } else {
+                    // 沒有 ID，顯示列表
+                    showPage('list');
+                }
+            } catch (e) {
+                console.error("【System Error】初始化失敗:", e);
+            }
+        };
+
+        function showPage(pageId) {
+            ['list', 'create', 'join', 'manage'].forEach(p => {
+                const el = document.getElementById('page-' + p);
+                if (el) el.classList.add('hidden');
+            });
+            const target = document.getElementById('page-' + pageId);
+            if (target) target.classList.remove('hidden');
+            
+            if (pageId === 'list') {
+                try { window.history.replaceState({}, document.title, window.location.pathname); } catch(e) {}
+                renderList();
+            }
+            if (pageId === 'join') renderJoinPage();
+            if (pageId === 'manage') renderManagePage();
+            window.scrollTo(0, 0);
+        }
+
+        function resetAndShowList() {
+            activeGroupId = null;
+            showPage('list');
+        }
+
+        // --- 3. 列表頁與篩選 ---
+        function setFilter(filter) {
+            currentFilter = filter;
+            // 更新按鈕樣式
+            document.getElementById('filter-all').className = `px-4 py-2 rounded-lg transition-all ${filter==='all' ? 'bg-pancake-100 text-pancake-800 font-bold shadow-inner' : 'text-pancake-400 hover:text-pancake-600'}`;
+            document.getElementById('filter-active').className = `px-4 py-2 rounded-lg transition-all ${filter==='active' ? 'bg-pancake-300 text-pancake-900 font-bold shadow-md' : 'text-pancake-400 hover:text-pancake-600'}`;
+            document.getElementById('filter-ended').className = `px-4 py-2 rounded-lg transition-all ${filter==='ended' ? 'bg-white border border-pancake-200 text-pancake-400 font-bold' : 'text-pancake-400 hover:text-pancake-600'}`;
+            renderList();
+        }
+
+        function renderList() {
+            const grid = document.getElementById('list-grid');
+            const emptyMsg = document.getElementById('list-empty');
+            const now = new Date();
+
+            // 篩選邏輯
+            const filteredGroups = groups.filter(g => {
+                const isDeleted = g.status === 'deleted';
+                const isExpired = new Date(g.deadline) < now;
+                const isEnded = isDeleted || isExpired;
+
+                if (currentFilter === 'active') return !isEnded;
+                if (currentFilter === 'ended') return isEnded;
+                return true;
+            });
+
+            if (filteredGroups.length === 0) {
+                grid.innerHTML = '';
+                emptyMsg.classList.remove('hidden');
+                return;
+            } else {
+                emptyMsg.classList.add('hidden');
+            }
+
+            grid.innerHTML = filteredGroups.map(g => {
+                const deadlineDate = new Date(g.deadline);
+                const isExpired = deadlineDate < now;
+                const isDeleted = g.status === 'deleted';
+                const isFormed = g.orders.reduce((sum, o) => sum + 1, 0) >= g.min; // 簡單以人數判斷
+                
+                let badgeClass, badgeText, cardClass;
+                if (isDeleted) {
+                    badgeClass = 'bg-red-100 text-red-500';
+                    badgeText = '已刪除';
+                    cardClass = 'opacity-60 grayscale-[0.5]';
+                } else if (isExpired) {
+                    badgeClass = 'bg-slate-100 text-slate-400';
+                    badgeText = '已截止';
+                    cardClass = 'opacity-80 grayscale-[0.3]';
+                } else if (isFormed) {
+                    badgeClass = 'bg-green-100 text-green-600';
+                    badgeText = '已成團';
+                    cardClass = '';
+                } else {
+                    badgeClass = 'bg-pancake-100 text-pancake-600';
+                    badgeText = '募集中';
+                    cardClass = '';
+                }
+
+                return `
+                    <div onclick="activeGroupId=${g.id}; showPage('join')" class="bg-white rounded-3xl p-6 border border-pancake-100 hover-card cursor-pointer flex flex-col h-full ${cardClass}">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-xs font-bold px-3 py-1.5 rounded-xl ${badgeClass}">${badgeText}</span>
+                            <span class="text-xs text-pancake-400 font-bold bg-pancake-50 px-2 py-1 rounded-lg">${g.type}</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-pancake-900 mb-2 line-clamp-2">${g.title}</h3>
+                        <p class="text-sm text-pancake-500 mb-4 line-clamp-2 flex-1">${g.desc || '無備註'}</p>
+                        
+                        <div class="pt-4 border-t border-pancake-50 flex items-center justify-between text-sm">
+                            <div class="flex items-center gap-2 text-pancake-400">
+                                <i class="fa-solid fa-users"></i>
+                                <span class="font-bold text-pancake-600">${g.orders.length}</span> 人參與
+                            </div>
+                            <div class="text-xs font-bold text-pancake-300">
+                                ${new Date(g.deadline).toLocaleDateString()}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // --- 4. 創建團購 ---
+        function handleCreate(e) {
+            e.preventDefault();
+            const title = document.getElementById('c-title').value;
+            const type = document.getElementById('c-type').value;
+            const min = parseInt(document.getElementById('c-min').value);
+            const deadline = document.getElementById('c-deadline').value;
+            const desc = document.getElementById('c-desc').value;
+
+            const newGroup = {
+                id: Date.now(),
+                title, type, min, deadline, desc,
+                status: 'active',
+                orders: []
+            };
+
+            groups.unshift(newGroup); // 新的排前面
+            saveData();
+            
+            // 顯示成功彈窗
+            const link = getShareLink(newGroup.id);
+            document.getElementById('created-link-input').value = link;
+            document.getElementById('modal-created').classList.remove('hidden');
+            activeGroupId = newGroup.id; // 設定為當前
+        }
+
+        function closeCreatedModal() {
+            document.getElementById('modal-created').classList.add('hidden');
+            showPage('join'); // 轉跳到該團購頁
+        }
+        
+        function copyCreatedLink() {
+            const input = document.getElementById('created-link-input');
+            input.select();
+            document.execCommand('copy');
+            showToast();
+        }
+
+        // --- 5. 許願頁面邏輯 ---
+        function renderJoinPage() {
+            const group = groups.find(g => g.id == activeGroupId);
+            if (!group) return;
+
+            // 填充基本資訊
+            document.getElementById('j-title').innerText = group.title;
+            document.getElementById('j-tag').innerText = group.type;
+            document.getElementById('j-desc').innerText = group.desc || '主揪沒有特別交代什麼～';
+            
+            const d = new Date(group.deadline);
+            document.getElementById('j-deadline-text').innerText = `${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+
+            // 檢查狀態
+            const now = new Date();
+            const isExpired = new Date(group.deadline) < now;
+            const isDeleted = group.status === 'deleted';
+            const statusEl = document.getElementById('j-status');
+            const overlay = document.getElementById('j-form-overlay');
+            const banner = document.getElementById('j-expired-banner');
+            const submitBtn = document.getElementById('btn-submit-order');
+            const addBtn = document.getElementById('btn-add-item');
+
+            if (isDeleted) {
+                statusEl.className = 'text-xs font-bold px-3 py-1 rounded-full bg-red-100 text-red-500';
+                statusEl.innerText = '已刪除';
+                overlay.classList.remove('hidden');
+                banner.classList.remove('hidden');
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                addBtn.disabled = true;
+            } else if (isExpired) {
+                statusEl.className = 'text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-500';
+                statusEl.innerText = '已截止';
+                overlay.classList.remove('hidden');
+                banner.classList.remove('hidden');
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                addBtn.disabled = true;
+            } else {
+                statusEl.className = 'text-xs font-bold px-3 py-1 rounded-full bg-green-100 text-green-600';
+                statusEl.innerText = '募集中';
+                overlay.classList.add('hidden');
+                banner.classList.add('hidden');
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                addBtn.disabled = false;
+            }
+
+            // 初始化購物車列
+            const cartList = document.getElementById('j-cart-list');
+            cartList.innerHTML = '';
+            addCartRow(); // 預設一列
+            updateTotalItems();
+
+            // 渲染其他人列表
+            renderOthersList(group);
+        }
+
+        function addCartRow() {
+            const container = document.getElementById('j-cart-list');
+            const id = Date.now();
+            const div = document.createElement('div');
+            div.className = 'bg-pancake-50/50 p-4 rounded-2xl border border-pancake-100 relative group transition-all hover:bg-white hover:shadow-sm';
+            div.innerHTML = `
+                <div class="grid grid-cols-12 gap-3 items-start">
+                    <div class="col-span-8">
+                        <input type="text" placeholder="品項名稱 (例如: 義美小泡芙)" class="cart-name w-full bg-transparent border-b border-pancake-200 focus:border-pancake-500 outline-none py-1 text-sm font-bold text-pancake-800 placeholder-pancake-300">
+                    </div>
+                    <div class="col-span-4">
+                        <div class="flex items-center border border-pancake-200 rounded-lg bg-white overflow-hidden">
+                            <button type="button" onclick="changeQty(this, -1)" class="w-8 h-8 flex items-center justify-center text-pancake-400 hover:bg-pancake-50 hover:text-pancake-600 transition-colors">-</button>
+                            <input type="number" value="1" min="1" class="cart-qty w-full text-center text-sm font-bold text-pancake-700 outline-none appearance-none" onchange="updateTotalItems()">
+                            <button type="button" onclick="changeQty(this, 1)" class="w-8 h-8 flex items-center justify-center text-pancake-400 hover:bg-pancake-50 hover:text-pancake-600 transition-colors">+</button>
+                        </div>
+                    </div>
+                    <div class="col-span-12 mt-1">
+                         <input type="text" placeholder="參考連結 (選填)" class="cart-link w-full bg-transparent text-xs text-pancake-500 placeholder-pancake-300 outline-none">
+                    </div>
+                </div>
+                <button onclick="removeCartRow(this)" class="absolute -top-2 -right-2 w-6 h-6 bg-red-100 text-red-500 rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-200 shadow-sm">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            `;
+            container.appendChild(div);
+            updateTotalItems();
+        }
+
+        function removeCartRow(btn) {
+            const list = document.getElementById('j-cart-list');
+            if (list.children.length > 1) {
+                btn.parentElement.remove();
+                updateTotalItems();
+            } else {
+                // 如果只剩一個，清空內容而不是刪除
+                const row = btn.parentElement;
+                row.querySelector('.cart-name').value = '';
+                row.querySelector('.cart-link').value = '';
+                row.querySelector('.cart-qty').value = 1;
+            }
+        }
+
+        function changeQty(btn, delta) {
+            const input = btn.parentElement.querySelector('input');
+            let val = parseInt(input.value) || 0;
+            val += delta;
+            if (val < 1) val = 1;
+            input.value = val;
+            updateTotalItems();
+        }
+
+        function updateTotalItems() {
+            const qtys = document.querySelectorAll('.cart-qty');
+            let total = 0;
+            qtys.forEach(q => total += parseInt(q.value) || 0);
+            document.getElementById('j-total-items').innerText = total;
+        }
+
+        function renderOthersList(group) {
+            const list = document.getElementById('j-others-list');
+            const countEl = document.getElementById('j-people-count');
+            
+            countEl.innerText = `${group.orders.length} 人參與`;
+            
+            if (group.orders.length === 0) {
+                list.innerHTML = `<div class="text-center py-8 text-pancake-300 text-sm">還沒有人許願，搶頭香！</div>`;
+                return;
+            }
+
+            list.innerHTML = group.orders.map(o => `
+                <div class="bg-pancake-50/50 rounded-xl p-3 border border-pancake-100/50">
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="font-bold text-pancake-800 text-sm">${o.name}</span>
+                        <span class="text-xs text-pancake-400 bg-white px-2 py-0.5 rounded-md border border-pancake-100">x${o.items.reduce((s,i)=>s+i.qty,0)}</span>
+                    </div>
+                    <ul class="text-xs text-pancake-600 space-y-1 ml-1">
+                        ${o.items.map(i => `
+                            <li class="flex items-center gap-1 truncate">
+                                <span class="w-1 h-1 rounded-full bg-pancake-300"></span>
+                                <span class="truncate">${i.name}</span>
+                                ${i.hasLink ? `<a href="${i.link}" target="_blank" class="text-blue-400 hover:text-blue-600"><i class="fa-solid fa-link"></i></a>` : ''}
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `).join('');
+        }
+
+        function submitOrder() {
+            const name = document.getElementById('j-name').value.trim();
+            if (!name) { alert('請輸入姓名'); return; }
+
+            const items = [];
+            const rows = document.querySelectorAll('#j-cart-list > div');
+            let hasEmpty = false;
+
+            rows.forEach(row => {
+                const n = row.querySelector('.cart-name').value.trim();
+                const q = parseInt(row.querySelector('.cart-qty').value);
+                const l = row.querySelector('.cart-link').value.trim();
+                
+                if (n) {
+                    items.push({ name: n, qty: q, hasLink: !!l, link: l });
+                }
+            });
+
+            if (items.length === 0) { alert('請至少填寫一個品項'); return; }
+
+            // 更新資料
+            const groupIndex = groups.findIndex(g => g.id == activeGroupId);
+            if (groupIndex === -1) return;
+
+            groups[groupIndex].orders.unshift({
+                id: Date.now(),
+                name: name,
+                items: items
+            });
+
+            saveData();
+            
+            // 顯示成功並重整
+            document.getElementById('modal-success').classList.remove('hidden');
+            renderJoinPage();
+        }
+
+        function closeModal() {
+            document.getElementById('modal-success').classList.add('hidden');
+            // 清空輸入欄位
+            document.querySelectorAll('.cart-name').forEach(i => i.value = '');
+            document.querySelectorAll('.cart-link').forEach(i => i.value = '');
+            document.querySelectorAll('.cart-qty').forEach(i => i.value = 1);
+            updateTotalItems();
+        }
+
+        // --- 6. 管理與分享 ---
+        function copyShareLink() {
+            const link = getShareLink(activeGroupId);
+            
+            // 由於 iframe 安全性，這裡用較通用的方法
+            const tempInput = document.createElement("input");
+            tempInput.value = link;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempInput);
+            
+            showToast();
+        }
+
+        function showToast() {
+            const t = document.getElementById('toast');
+            t.classList.remove('opacity-0', 'translate-y-4');
+            setTimeout(() => {
+                t.classList.add('opacity-0', 'translate-y-4');
+            }, 2000);
+        }
+
+        function renderManagePage() {
+            const group = groups.find(g => g.id == activeGroupId);
+            if (!group) return;
+
+            document.getElementById('m-share-input').value = getShareLink(group.id);
+
+            // 統計品項
+            const stats = {};
+            let totalQty = 0;
+            group.orders.forEach(order => {
+                order.items.forEach(item => {
+                    const key = item.name.trim(); // 簡單用名稱分組
+                    if (!stats[key]) stats[key] = { qty: 0, count: 0 };
+                    stats[key].qty += item.qty;
+                    stats[key].count += 1;
+                    totalQty += item.qty;
+                });
+            });
+
+            // 渲染統計列表
+            const statsList = document.getElementById('m-stats-list');
+            if (Object.keys(stats).length === 0) {
+                statsList.innerHTML = '<div class="text-gray-400 text-sm text-center">暫無數據</div>';
+            } else {
+                // 排序：數量多的在前
+                const sortedKeys = Object.keys(stats).sort((a,b) => stats[b].qty - stats[a].qty);
+                statsList.innerHTML = sortedKeys.map((name, idx) => `
+                    <div class="flex items-center justify-between text-sm py-1">
+                        <div class="flex items-center gap-2 overflow-hidden">
+                            <span class="text-xs font-bold text-pancake-400 w-4">${idx+1}.</span>
+                            <span class="text-pancake-800 truncate font-medium">${name}</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                             <span class="text-xs text-pancake-400 bg-pancake-50 px-1.5 rounded">${stats[name].count}人</span>
+                             <span class="font-bold text-pancake-600 min-w-[20px] text-right">${stats[name].qty}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            document.getElementById('m-total-qty').innerText = totalQty;
+
+            // 渲染詳細訂單表格
+            const ordersList = document.getElementById('m-orders-list');
+            if (group.orders.length === 0) {
+                 ordersList.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-gray-400">尚無許願單</td></tr>';
+            } else {
+                ordersList.innerHTML = group.orders.map(order => {
+                    // 一個人可能有多個品項，顯示多行
+                    return order.items.map((item, i) => `
+                        <tr class="hover:bg-pancake-50/50 transition-colors group">
+                            <td class="px-6 py-3 font-bold text-pancake-700 ${i===0?'':'border-t-0'}">
+                                ${i===0 ? order.name : ''}
+                            </td>
+                            <td class="px-6 py-3 text-pancake-600 font-medium">
+                                ${item.name}
+                            </td>
+                            <td class="px-6 py-3 text-right font-bold text-pancake-800">
+                                ${item.qty}
+                            </td>
+                            <td class="px-6 py-3">
+                                ${item.hasLink ? `<a href="${item.link}" target="_blank" class="text-blue-400 hover:text-blue-600 text-xs bg-blue-50 px-2 py-1 rounded-md"><i class="fa-solid fa-up-right-from-square mr-1"></i>連結</a>` : '<span class="text-gray-300 text-xs">-</span>'}
+                            </td>
+                        </tr>
+                    `).join('');
+                }).join('');
+            }
+        }
+
+        function deleteGroup() {
+            if (!confirm("確定要刪除此團購嗎？刪除後將無法恢復，且參與者無法再查看。")) return;
+            
+            const idx = groups.findIndex(g => g.id == activeGroupId);
+            if (idx !== -1) {
+                // 軟刪除 (標記狀態)
+                groups[idx].status = 'deleted'; 
+                // 或者硬刪除: groups.splice(idx, 1);
+                saveData();
+                alert("已刪除團購");
+                resetAndShowList();
+            }
+        }
+    </script>
+</body>
+</html>
